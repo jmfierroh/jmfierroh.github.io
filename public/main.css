@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+html {
+	font-family: "Noto Sans", serif;
+	font-optical-sizing: auto;
+	font-weight: normal;
+	font-style: normal;
+	font-variation-settings: "wdth" 100;
+
+	--default-spacing: 8px;
+	--round-border-small: 10px;
+
+	/* https://colorffy.com/dark-theme-generator?colors=6dbed6-0d002b */
+	/** Dark theme primary colors */
+	--clr-primary-a0: #6dbed6;
+	--clr-primary-a10: #80c5db;
+	--clr-primary-a20: #91ccdf;
+	--clr-primary-a30: #a2d4e4;
+	--clr-primary-a40: #b2dbe8;
+	--clr-primary-a50: #c2e2ed;
+
+	/** Dark theme surface colors */
+	--clr-surface-a0: #0d002b;
+	--clr-surface-a10: #231d3f;
+	--clr-surface-a20: #3b3555;
+	--clr-surface-a30: #554e6b;
+	--clr-surface-a40: #6f6982;
+	--clr-surface-a50: #8a859a;
+
+	background-color: var(--clr-surface-a0);
+	color: white;
+}
+
+.monospace {
+	font-family: "Noto Sans Mono", "Noto Sans", serif;
+	font-optical-sizing: auto;
+	font-weight: normal;
+	font-style: normal;
+	font-variation-settings: "wdth" 100;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24
+}
+
+html, body, h1, h2, h3, h4, h5, h6, p, hr, main, article, section {
+	margin: 0;
+	padding: 0;
+}
+
+button {
+	background-color: var(--clr-surface-a10);
+	border: 1px solid var(--clr-surface-a30);
+	color: var(--clr-surface-a0);
+	border-radius: var(--round-border-small);
+	font-weight: bold;
+
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	cursor: pointer;
+}
+button:active {
+	background-color: var(--clr-surface-a30);
+}
+button .icon {
+	color: var(--clr-primary-a40)
+}
+
+button .icon, button .label {
+	display: inline-block;
+}
+
+header > .button-group {
+	display: flex;
+	flex-flow: row wrap;
+}
+header > .button-group button {
+	border-radius: 0;
+	border: 1px solid var(--clr-surface-a50);
+	background-color: var(--clr-primary-a50);
+	color: var(--clr-surface-a0);
+}
+header > .button-group button:active {
+	background-color: var(--clr-surface-a50);
+}
+header > .button-group button .icon {
+	color: var(--clr-surface-a0);
+}
+
+header > .button-group button:first-child {
+	border-top-left-radius: var(--round-border-small);
+	border-bottom-left-radius: var(--round-border-small);
+}
+header > .button-group button:last-child {
+	border-top-right-radius: var(--round-border-small);
+	border-bottom-right-radius: var(--round-border-small);
+}

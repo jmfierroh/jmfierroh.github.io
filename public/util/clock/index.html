@@ -2,8 +2,213 @@
 <html>
 <head>
 	<title>Clock</title>
+	<link rel="stylesheet" href="../../main.css"/>
+	<script src="https://cdn.jsdelivr.net/npm/luxon@3.5.0/build/global/luxon.min.js"></script>
+	<script>
+		window.addEventListener('load', () => {
+			loadClockGallery();
+
+			document.getElementById('refresh-clocks')?.addEventListener('click', () =>  updateClocks());
+
+			const newClockModal = document.getElementById('new-clock-modal');
+
+			document.getElementById('add-clock')?.addEventListener('click', () => newClockModal?.showModal());
+			newClockModal?.addEventListener('submit', () => {
+				const newName = document.getElementById('new-clock-name')?.value;
+				const newOffset = document.getElementById('new-clock-offset').value;
+
+				const clockDefinitions = getClockDefinitions();
+				clockDefinitions[newName] = newOffset;
+				window.localStorage.setItem('clocks', JSON.stringify(clockDefinitions));
+				loadClockGallery();
+			});
+			newClockModal?.addEventListener('close', () => {
+				newClockModal.querySelectorAll('input').forEach(input => {
+					if (input.type !== 'submit') {
+						input.value = input.placeholder;
+						input.reportValidity();
+					}
+				});
+			});
+		});
+
+		const clockUpdaterFunctions = [];
+		let referenceDateTime = luxon.DateTime.utc();
+
+		function getClockDefinitions() {
+			let clockDefinitions = {};
+
+			const clockDefStr = window.localStorage.getItem('clocks');
+			if (clockDefStr) {
+				clockDefinitions = JSON.parse(clockDefStr);
+				clockDefinitions.UTC = 'UTC';
+			}
+			else {
+				clockDefinitions = { UTC: 'UTC' };
+				window.localStorage.setItem('clocks', JSON.stringify(clockDefinitions));
+			}
+
+			return clockDefinitions;
+		}
+		function loadClockGallery() {
+			const clockDefinitions = getClockDefinitions();
+
+			const gallery = document.querySelector('.clock-gallery');
+			const template = document.getElementById('clock-template');
+
+			gallery.replaceChildren();
+			clockUpdaterFunctions.slice(0, clockUpdaterFunctions.length);
+
+			for (const clockName in clockDefinitions) {
+				const offset = clockDefinitions[clockName];
+				const clockElement = template.content.cloneNode(true);
+
+				replaceSlotElement(clockElement, 'clock-name', clockName);
+				const clockOffsetElement = replaceSlotElement(clockElement, 'clock-offset', clockName);
+				const clockTimeElement = replaceSlotElement(clockElement, 'clock-time', clockName);
+				const clockDateElement = replaceSlotElement(clockElement, 'clock-date', clockName);
+
+				clockUpdaterFunctions.push(dateTime => {
+					const zonedDateTime = dateTime.setZone(offset);
+					const referenceDate = dateTime.setZone(offset, { keepLocalTime: true });
+					const isUtc = zonedDateTime.offset === 0;
+					clockTimeElement.textContent = zonedDateTime.toLocaleString(luxon.DateTime.TIME_24_SIMPLE);
+
+					if (isUtc) {
+						clockOffsetElement.textContent = 'UTC';
+						clockDateElement.textContent = zonedDateTime.toISODate();
+					} else {
+						clockOffsetElement.textContent = 'UTC' + zonedDateTime.toFormat('ZZ')
+						clockDateElement.textContent = zonedDateTime.toRelativeCalendar({ base: referenceDate });
+					}
+				});
+				gallery.appendChild(clockElement);
+			}
+
+			updateClocks(referenceDateTime);
+		}
+
+		function replaceSlotElement(templateClone, slotName, contents) {
+			if (!templateClone) {
+				return templateClone;
+			}
+
+			const slot = templateClone.querySelector(`slot[name="${slotName}"]`);
+			if (!slot) {
+				return slot;
+			}
+
+			if (!(contents instanceof HTMLElement)) {
+				const text = document.createTextNode(`${contents}`);
+				contents = text;
+			}
+
+			try {
+				contents.classList.add(slotName);
+			} catch (e) {}
+			slot.replaceWith(contents);
+
+			return contents;
+		}
+		function updateClocks(dateTime) {
+			dateTime ??= luxon.DateTime.utc();
+			for (const fn of clockUpdaterFunctions) {
+				fn(dateTime);
+			}
+		}
+	</script>
+	<style>
+		body > header,
+		body > main {
+			padding-inline: calc(2 * var(--default-spacing));
+		}
+		body > header {
+			padding-block: calc(2 * var(--default-spacing));
+			display: flex;
+			flex-flow: row wrap;
+			justify-content: space-between;
+		}
+		.clock-gallery {
+			display: flex;
+			flex-flow: row wrap;
+			gap: var(--default-spacing) var(--default-spacing);
+		}
+		.clock {
+			--clock-areas-spacing: calc(var(--default-spacing) / 2);
+		}
+		.clock > .clock-head,
+		.clock > .clock-face {
+			display: flex;
+			flex-flow: column nowrap;
+			align-items: center;
+
+			border: 1px solid var(--clr-surface-a30);
+			padding: calc(var(--clock-areas-spacing) * 2);
+		}
+		.clock > .clock-head {
+			background-color: var(--clr-surface-a30);
+			color: ivory;
+			border-top-left-radius: var(--round-border-small);
+			border-top-right-radius: var(--round-border-small);
+		}
+		.clock > .clock-face {
+			background-color: var(--clr-surface-a10);
+			color: ivory;
+			border-bottom-left-radius: var(--round-border-small);
+			border-bottom-right-radius: var(--round-border-small);
+		}
+		.clock .clock-time {
+			font-size: xx-large;
+			font-weight: bold;
+		}
+		.clock .clock-date {
+			font-size: small;
+		}
+	</style>
 </head>
 <body>
-	TODO
+	<header>
+		<h1>Clocks</h1>
+		<div class="button-group">
+			<button id="add-clock">
+				<span class="icon material-symbols-outlined">add</span>
+				<span class="label">Add Clock</span>
+			</button>
+			<button id="refresh-clocks">
+				<span class="icon material-symbols-outlined">refresh</span>
+			</button>
+		</div>
+	</header>
+	<main>
+		<div class="clock-gallery"></div>
+		<div>%%REFERENCE TIME OUTPUT AND DISPLAY%%</div>
+	</main>
+
+	<template id="clock-template">
+		<article class="clock">
+			<div class="clock-head">
+				<h3 class="clock-name"><slot name="clock-name">NEED NAME</slot></h3>
+				<span class="clock-date monospace"><slot name="clock-offset">UTC</slot></span>
+			</div>
+			<div class="clock-face monospace">
+				<span class="clock-time"><slot name="clock-time">23:59:60</slot></span>
+				<span class="clock-date"><slot name="clock-date">9999-12-31</slot></span>
+			</div>
+		</article>
+	</template>
+	<dialog id="new-clock-modal">
+		<form method="dialog">
+			<h2>Add new clock</h2>
+			<label for="new-clock-name">Name:</label>
+			<input type="text" id="new-clock-name" required />
+			<br />
+			<label for="new-clock-offset">Offset:</label>
+			<input type="text" id="new-clock-offset" required />
+
+			<footer>
+				<input type="submit" value="Save"/>
+			</footer>
+		</form>
+	</dialog>
 </body>
 </html>
