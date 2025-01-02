@@ -2,56 +2,8 @@
 <html>
 <head>
 	<title>Clock</title>
-	<link rel="stylesheet" href="../../main.css"/>
-	<script type="module" src="clock.js"></script>
-	<style>
-		body > header,
-		body > main {
-			padding-inline: calc(2 * var(--default-spacing));
-		}
-		body > header {
-			padding-block: calc(2 * var(--default-spacing));
-			display: flex;
-			flex-flow: row wrap;
-			justify-content: space-between;
-		}
-		.clock-gallery {
-			display: flex;
-			flex-flow: row wrap;
-			gap: var(--default-spacing) var(--default-spacing);
-		}
-		.clock {
-			--clock-areas-spacing: calc(var(--default-spacing) / 2);
-		}
-		.clock > .clock-head,
-		.clock > .clock-face {
-			display: flex;
-			flex-flow: column nowrap;
-			align-items: center;
-
-			border: 1px solid var(--clr-surface-a30);
-			padding: calc(var(--clock-areas-spacing) * 2);
-		}
-		.clock > .clock-head {
-			background-color: var(--clr-surface-a30);
-			color: ivory;
-			border-top-left-radius: var(--round-border-small);
-			border-top-right-radius: var(--round-border-small);
-		}
-		.clock > .clock-face {
-			background-color: var(--clr-surface-a10);
-			color: ivory;
-			border-bottom-left-radius: var(--round-border-small);
-			border-bottom-right-radius: var(--round-border-small);
-		}
-		.clock .clock-time {
-			font-size: xx-large;
-			font-weight: bold;
-		}
-		.clock .clock-date {
-			font-size: small;
-		}
-	</style>
+	<link rel="stylesheet" href="./clock.css"/>
+	<script type="module" src="./clock.js"></script>
 </head>
 <body>
 	<header>
@@ -71,6 +23,7 @@
 	</header>
 	<main>
 		<div class="clock-gallery"></div>
+		<br />
 		<div>%%REFERENCE TIME OUTPUT AND DISPLAY%%</div>
 	</main>
 
