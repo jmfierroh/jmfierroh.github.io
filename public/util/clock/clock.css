@@ -38,6 +38,7 @@ body > header {
 	color: ivory;
 	border-bottom-left-radius: var(--round-border-small);
 	border-bottom-right-radius: var(--round-border-small);
+	border-block-start: 0;
 }
 .clock .clock-time {
 	font-size: xx-large;
