@@ -1,6 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import url('./fonts.css');
+@import url('./variables.css');
 
+/* Reset elements */
+html, body, h1, h2, h3, h4, h5, h6, p, hr, main, article, section {
+	margin: 0;
+	padding: 0;
+}
+
+/******************************************************************************/
+/* Base styles */
 html {
 	font-family: "Noto Sans", serif;
 	font-optical-sizing: auto;
@@ -8,96 +16,130 @@ html {
 	font-style: normal;
 	font-variation-settings: "wdth" 100;
 
-	--default-spacing: 8px;
-	--round-border-small: 10px;
-
-	/* https://colorffy.com/dark-theme-generator?colors=6dbed6-0d002b */
-	/** Dark theme primary colors */
-	--clr-primary-a0: #6dbed6;
-	--clr-primary-a10: #80c5db;
-	--clr-primary-a20: #91ccdf;
-	--clr-primary-a30: #a2d4e4;
-	--clr-primary-a40: #b2dbe8;
-	--clr-primary-a50: #c2e2ed;
-
-	/** Dark theme surface colors */
-	--clr-surface-a0: #0d002b;
-	--clr-surface-a10: #231d3f;
-	--clr-surface-a20: #3b3555;
-	--clr-surface-a30: #554e6b;
-	--clr-surface-a40: #6f6982;
-	--clr-surface-a50: #8a859a;
-
 	background-color: var(--clr-surface-a0);
 	color: white;
 }
 
-.monospace {
-	font-family: "Noto Sans Mono", "Noto Sans", serif;
-	font-optical-sizing: auto;
-	font-weight: normal;
-	font-style: normal;
-	font-variation-settings: "wdth" 100;
-}
-
-.material-symbols-outlined {
-  font-variation-settings:
-  'FILL' 1,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24
-}
-
-html, body, h1, h2, h3, h4, h5, h6, p, hr, main, article, section {
-	margin: 0;
-	padding: 0;
-}
-
+/******************************************************************************/
+/* Generic button (dark background) */
 button {
 	background-color: var(--clr-surface-a10);
 	border: 1px solid var(--clr-surface-a30);
-	color: var(--clr-surface-a0);
+	color: white;
 	border-radius: var(--round-border-small);
 	font-weight: bold;
 
-	display: flex;
+	display: inline-flex;
 	flex-flow: row nowrap;
 	align-items: center;
 	cursor: pointer;
-}
-button:active {
-	background-color: var(--clr-surface-a30);
-}
-button .icon {
-	color: var(--clr-primary-a40)
 }
 
 button .icon, button .label {
 	display: inline-block;
 }
 
-header > .button-group {
+/******************************************************************************/
+/* Button Group */
+.button-group {
 	display: flex;
 	flex-flow: row wrap;
 }
-header > .button-group button {
+.button-group button {
 	border-radius: 0;
 	border: 1px solid var(--clr-surface-a50);
 	background-color: var(--clr-primary-a50);
 	color: var(--clr-surface-a0);
 }
-header > .button-group button:active {
+.button-group button:active {
 	background-color: var(--clr-surface-a50);
 }
-header > .button-group button .icon {
-	color: var(--clr-surface-a0);
-}
 
-header > .button-group button:first-child {
+.button-group button:first-child {
 	border-top-left-radius: var(--round-border-small);
 	border-bottom-left-radius: var(--round-border-small);
 }
-header > .button-group button:last-child {
+.button-group button:last-child {
 	border-top-right-radius: var(--round-border-small);
 	border-bottom-right-radius: var(--round-border-small);
+}
+
+
+/******************************************************************************/
+@keyframes dialog-fade-in {
+	0% {
+		opacity: 0;
+		transform: scaleY(0);
+		display: none;
+	}
+	100% {
+		opacity: 1;
+		transform: scaleY(1);
+		display: block;
+	}
+}
+@keyframes dialog-fade-out {
+	0% {
+		opacity: 1;
+		transform: scaleY(1);
+		display: block;
+	}
+	100% {
+		opacity: 0;
+		transform: scaleY(0);
+		display: none;
+	}
+}
+@keyframes dialog-backdrop-fade-in {
+	0% {
+		background-color: rgb(0 0 0 / 0%);
+	}
+	100% {
+		background-color: rgb(0 0 0 / 50%);
+	}
+}
+
+/* Modal Dialogs */
+dialog {
+	animation: dialog-fade-out 0.1s ease-out;
+	padding: 0;
+	border-radius: var(--round-border-small);
+}
+
+dialog[open] {
+	animation: dialog-fade-in 0.1s ease-out;
+}
+
+dialog[open]::backdrop {
+	animation: dialog-backdrop-fade-in 0.1s ease-out;
+	background-color: rgb(0 0 0 / 50%);
+}
+
+
+dialog .dialog-header,
+dialog .dialog-main,
+dialog .dialog-footer {
+	padding: var(--default-spacing);
+	color: white;
+}
+
+dialog .dialog-main {
+	padding-block: calc(var(--default-spacing) * 2);
+	background-color: var(--clr-surface-a10);
+}
+
+dialog .dialog-header,
+dialog .dialog-footer {
+	background-color: var(--clr-surface-a30);
+}
+
+dialog .dialog-footer {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: flex-end;
+}
+
+dialog .dialog-footer button {
+	font-size: large;
+	padding: var(--default-spacing)
 }

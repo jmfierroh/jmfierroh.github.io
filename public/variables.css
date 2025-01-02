@@ -1,0 +1,21 @@
+html {
+	--default-spacing: 8px;
+	--round-border-small: 10px;
+
+	/* https://colorffy.com/dark-theme-generator?colors=6dbed6-0d002b */
+	/** Dark theme primary colors */
+	--clr-primary-a0: #6dbed6;
+	--clr-primary-a10: #80c5db;
+	--clr-primary-a20: #91ccdf;
+	--clr-primary-a30: #a2d4e4;
+	--clr-primary-a40: #b2dbe8;
+	--clr-primary-a50: #c2e2ed;
+
+	/** Dark theme surface colors */
+	--clr-surface-a0: #0d002b;
+	--clr-surface-a10: #231d3f;
+	--clr-surface-a20: #3b3555;
+	--clr-surface-a30: #554e6b;
+	--clr-surface-a40: #6f6982;
+	--clr-surface-a50: #8a859a;
+}

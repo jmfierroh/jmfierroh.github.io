@@ -13,22 +13,44 @@
 			const newClockModal = document.getElementById('new-clock-modal');
 
 			document.getElementById('add-clock')?.addEventListener('click', () => newClockModal?.showModal());
-			newClockModal?.addEventListener('submit', () => {
-				const newName = document.getElementById('new-clock-name')?.value;
-				const newOffset = document.getElementById('new-clock-offset').value;
+			newClockModal?.addEventListener('submit', (e) => {
+				const newName = document.getElementById('new-clock-name');
+				const newNameValue = newName?.value;
+				const newOffset = document.getElementById('new-clock-offset');
+				const newOffsetValue = newOffset?.value;
+
+				if (newName?.validity?.valid  === false || newOffset?.validity?.valid === false) {
+					e.preventDefault();
+					return;
+				}
 
 				const clockDefinitions = getClockDefinitions();
-				clockDefinitions[newName] = newOffset;
+				if (newOffsetValue) {
+					if (luxon.Info.normalizeZone(newOffsetValue)?.valid) {
+						newOffset?.setCustomValidity('');
+					}
+					else {
+						e.preventDefault();
+						newOffset?.setCustomValidity('Invalid offset value');
+						return;
+					}
+					clockDefinitions[newNameValue] = newOffsetValue;
+				}
+				else {
+					delete clockDefinitions[newNameValue];
+				}
+
 				window.localStorage.setItem('clocks', JSON.stringify(clockDefinitions));
 				loadClockGallery();
 			});
 			newClockModal?.addEventListener('close', () => {
 				newClockModal.querySelectorAll('input').forEach(input => {
-					if (input.type !== 'submit') {
-						input.value = input.placeholder;
-						input.reportValidity();
-					}
+					input.value = '';
+					input.reportValidity();
 				});
+			});
+			document.querySelector('#new-clock-modal button[type="reset"]')?.addEventListener('click', () => {
+				newClockModal?.close();
 			});
 		});
 
@@ -56,11 +78,15 @@
 			const gallery = document.querySelector('.clock-gallery');
 			const template = document.getElementById('clock-template');
 
+			const now = luxon.DateTime.utc();
+			const sortedClocks = Object.entries(clockDefinitions).sort(([, offsetA], [, offsetB]) => {
+				return now.setZone(offsetA).offset - now.setZone(offsetB).offset;
+			})
+
 			gallery.replaceChildren();
 			clockUpdaterFunctions.slice(0, clockUpdaterFunctions.length);
 
-			for (const clockName in clockDefinitions) {
-				const offset = clockDefinitions[clockName];
+			for (const [clockName, offset] of sortedClocks) {
 				const clockElement = template.content.cloneNode(true);
 
 				replaceSlotElement(clockElement, 'clock-name', clockName);
@@ -75,7 +101,7 @@
 					clockTimeElement.textContent = zonedDateTime.toLocaleString(luxon.DateTime.TIME_24_SIMPLE);
 
 					if (isUtc) {
-						clockOffsetElement.textContent = 'UTC';
+						clockOffsetElement.textContent = '\u202F'; // &nbsp;
 						clockDateElement.textContent = zonedDateTime.toISODate();
 					} else {
 						clockOffsetElement.textContent = 'UTC' + zonedDateTime.toFormat('ZZ')
@@ -170,12 +196,15 @@
 	<header>
 		<h1>Clocks</h1>
 		<div class="button-group">
-			<button id="add-clock">
+			<button id="add-clock" title="Add, edit or delete clock">
 				<span class="icon material-symbols-outlined">add</span>
-				<span class="label">Add Clock</span>
+				/
+				<span class="icon material-symbols-outlined">edit</span>
+				/
+				<span class="icon material-symbols-outlined">delete</span>
 			</button>
-			<button id="refresh-clocks">
-				<span class="icon material-symbols-outlined">refresh</span>
+			<button id="refresh-clocks" title="Update clocks">
+				<span class="icon material-symbols-outlined">update</span>
 			</button>
 		</div>
 	</header>
@@ -198,15 +227,19 @@
 	</template>
 	<dialog id="new-clock-modal">
 		<form method="dialog">
-			<h2>Add new clock</h2>
-			<label for="new-clock-name">Name:</label>
-			<input type="text" id="new-clock-name" required />
-			<br />
-			<label for="new-clock-offset">Offset:</label>
-			<input type="text" id="new-clock-offset" required />
-
-			<footer>
-				<input type="submit" value="Save"/>
+			<header class="dialog-header">
+				<h2>Add, edit or delete clock</h2>
+			</header>
+			<div class="dialog-main">
+				<label for="new-clock-name">Name:</label>
+				<input type="text" id="new-clock-name" required autocomplete="off"/>
+				<br />
+				<label for="new-clock-offset">Offset:</label>
+				<input type="text" id="new-clock-offset" autocomplete="off" placeholder="America/New_York or EST or UTC+1" />
+			</div>
+			<footer class="dialog-footer">
+				<button type="submit">Save</button>
+				<button type="reset" formnovalidate>Cancel</button>
 			</footer>
 		</form>
 	</dialog>
