@@ -137,11 +137,15 @@ class WorldClocks {
 	init() {
 		this.loadClockGallery();
 		getKnownElementById('refresh-clocks', HTMLButtonElement).addEventListener('click', () => this.updateClocks());
-
-		const newClockPopup = getKnownElementById('new-clock-modal', HTMLDialogElement);
-
 		getKnownElementById('add-clock').addEventListener('click', () => this.#showEditClockPopup());
 
+		const newClockPopup = getKnownElementById('new-clock-modal', HTMLDialogElement);
+		newClockPopup.querySelectorAll('input[type=text]').forEach(input => {
+			castNode(HTMLInputElement, input).addEventListener('change', (e) => {
+				// @ts-ignore
+				castNode(HTMLInputElement, e.target)?.setCustomValidity('');
+			});
+		});
 		newClockPopup.addEventListener('submit', (e) => {
 			const newName = getKnownElementById('new-clock-name', HTMLInputElement);
 			const newOffset = getKnownElementById('new-clock-offset', HTMLInputElement);
@@ -151,8 +155,17 @@ class WorldClocks {
 				return;
 			}
 
-			const newNameValue = newName.value;
-			const newOffsetValue = newOffset.value;
+			const newNameValue = newName.value?.trim();
+			const newOffsetValue = newOffset.value?.trim();
+
+			if (newNameValue.toUpperCase() === 'UTC') {
+				newName.setCustomValidity('UTC cannot be edited');
+				e.preventDefault();
+				return;
+			}
+			else {
+				newName.setCustomValidity('');
+			}
 
 			const clockDefinitions = WorldClocks.ClockDefinitions;
 			if (newOffsetValue) {
@@ -173,10 +186,13 @@ class WorldClocks {
 			WorldClocks.ClockDefinitions = clockDefinitions;
 			this.loadClockGallery();
 		});
-		newClockPopup.addEventListener('close', () => {
-			newClockPopup.querySelectorAll('input').forEach(input => {
-				input.value = '';
+		newClockPopup.addEventListener('close', (e) => {
+			// @ts-ignore
+			const popup = castNode(HTMLDialogElement, e.target);
+			popup.querySelectorAll('input').forEach(input => {
+				input.value = '.';
 				input.reportValidity();
+				input.setCustomValidity('');
 			});
 		});
 		queryKnownSelector(document, '#new-clock-modal button[type="reset"]').addEventListener('click', () => {
