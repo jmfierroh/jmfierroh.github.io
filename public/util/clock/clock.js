@@ -69,6 +69,21 @@ function queryKnownSelector(parent, selector, type) {
 	return element;
 }
 
+/**
+ * @template {Node} TType
+ * @param {{ new(): TType; name: string; }} type
+ * @param {Node} node
+ * @returns {TType}
+ */
+function castNode(type, node) {
+	if (type && !(node instanceof type)) {
+		throw new TypeError(`Node "${node}" was expected to be of type ${type.name} but was actually of type ${node.constructor?.name}`);
+	}
+
+	// @ts-ignore
+	return node;
+}
+
 class WorldClocks {
 	/**
 	 * @type {ClockUpdaterFunction[]}
@@ -111,13 +126,21 @@ class WorldClocks {
 		window.localStorage.setItem('clocks', JSON.stringify(value));
 	}
 
+	static get ReferenceClockName() {
+		let refClock = window.localStorage.getItem('ref');
+		return refClock;
+	}
+	static set ReferenceClockName(value) {
+		window.localStorage.setItem('ref', value);
+	}
+
 	init() {
 		this.loadClockGallery();
 		getKnownElementById('refresh-clocks', HTMLButtonElement).addEventListener('click', () => this.updateClocks());
 
 		const newClockPopup = getKnownElementById('new-clock-modal', HTMLDialogElement);
 
-		getKnownElementById('add-clock').addEventListener('click', () => newClockPopup.showModal());
+		getKnownElementById('add-clock').addEventListener('click', () => this.#showEditClockPopup());
 
 		newClockPopup.addEventListener('submit', (e) => {
 			const newName = getKnownElementById('new-clock-name', HTMLInputElement);
@@ -163,7 +186,7 @@ class WorldClocks {
 
 	/**
 	 * Replaces the contents of a slot with the provided contents.
-	 * @param {HTMLElement} templateClone
+	 * @param {DocumentFragment} templateClone
 	 * @param {string} slotName
 	 * @param {HTMLElement | Text | string} contents
 	 */
@@ -195,9 +218,9 @@ class WorldClocks {
 	 * @param {luxon.DateTimeMaybeValid} [dateTime]
 	 */
 	updateClocks(dateTime) {
-		dateTime ??= luxon.DateTime.utc();
+		this.referenceDateTime = (dateTime?.setZone('UTC')) ?? luxon.DateTime.utc();
 		this.clockUpdaterFunctions.forEach(fn => {
-			fn(dateTime);
+			fn(this.referenceDateTime);
 		});
 	}
 
@@ -207,38 +230,125 @@ class WorldClocks {
 
 		const sortedClocks = WorldClocks.#getSortedClockDefinitions();
 
+		let referenceClockName = WorldClocks.ReferenceClockName;
+		if (!sortedClocks.find(([name,]) => name === referenceClockName)) {
+			referenceClockName = 'UTC';
+			WorldClocks.ReferenceClockName = referenceClockName;
+		}
+
 		gallery.replaceChildren(); // Clear children
 		this.clockUpdaterFunctions.slice(0, this.clockUpdaterFunctions.length);
 
 		for (const [clockName, offset] of sortedClocks) {
-			/** @type {HTMLElement} */
-			// @ts-ignore
-			const clockElement = template.content.cloneNode(true); ///////////////////////////////// Clock element root
+			const clockFragment = castNode(DocumentFragment, template.content.cloneNode(true));
+			const clockElement = castNode(HTMLElement, clockFragment.firstElementChild);
 
-			this.#replaceSlotElement(clockElement, 'clock-name', clockName);
-			const clockOffsetElement = this.#replaceSlotElement(clockElement, 'clock-offset', clockName);
-			const clockTimeElement = this.#replaceSlotElement(clockElement, 'clock-time', clockName);
-			const clockDateElement = this.#replaceSlotElement(clockElement, 'clock-date', clockName);
+			const selected = clockName === referenceClockName;
+			if (selected) {
+				clockElement.dataset.selected = 'true';
+			}
+			clockElement.dataset.offset = offset;
+			this.#replaceSlotElement(clockFragment, 'clock-selected', selected ? 'check_box' : 'check_box_outline_blank');
+
+			this.#replaceSlotElement(clockFragment, 'clock-name', clockName);
+			const clockOffsetElement = this.#replaceSlotElement(clockFragment, 'clock-offset', clockName);
+			const clockTimeElement = this.#replaceSlotElement(clockFragment, 'clock-time', clockName);
+			const clockDateElement = this.#replaceSlotElement(clockFragment, 'clock-date', clockName);
 
 			this.clockUpdaterFunctions.push(dateTime => {
-				// TODO: Logic in case provided dateTime is invalid
 				const zonedDateTime = dateTime.setZone(offset);
 				const referenceDate = dateTime.setZone(offset, { keepLocalTime: true });
 				const isUtc = zonedDateTime.offset === 0;
-				clockTimeElement.textContent = zonedDateTime.toLocaleString(luxon.DateTime.TIME_24_SIMPLE);
 
-				if (isUtc) {
-					clockOffsetElement.textContent = '\u202F'; // &nbsp;
-					clockDateElement.textContent = zonedDateTime.toISODate();
-				} else {
-					clockOffsetElement.textContent = 'UTC' + zonedDateTime.toFormat('ZZ')
-					clockDateElement.textContent = zonedDateTime.toRelativeCalendar({ base: referenceDate });
+				if (zonedDateTime.isValid) {
+					clockTimeElement.textContent = zonedDateTime.toLocaleString(luxon.DateTime.TIME_24_SIMPLE);
+
+					if (isUtc) {
+						clockOffsetElement.textContent = '\u202F'; // &nbsp;
+						clockDateElement.textContent = zonedDateTime.toISODate();
+					} else {
+						clockOffsetElement.textContent = 'UTC' + zonedDateTime.toFormat('ZZ');
+						clockDateElement.textContent = zonedDateTime.toRelativeCalendar({ base: referenceDate });
+					}
 				}
+				else {
+					clockTimeElement.textContent = '??:??';
+					if (isUtc) {
+						clockOffsetElement.textContent = '\u202F'; // &nbsp;
+						clockDateElement.textContent = '????-??-??';
+					} else {
+						clockOffsetElement.textContent = '???';
+						clockDateElement.textContent = '?';
+					}
+				}
+
 			});
-			gallery.appendChild(clockElement);
+
+			const setSelectButton = queryKnownSelector(clockFragment, '.clock-actions button.set-selected', HTMLButtonElement);
+			setSelectButton.addEventListener('click', this.#onClickSetSelected(clockName, selected));
+			if (selected) {
+				setSelectButton.title = '';
+			}
+
+			const editButton = queryKnownSelector(clockFragment, '.clock-actions button.edit', HTMLButtonElement);
+			const deleteButton = queryKnownSelector(clockFragment, '.clock-actions button.delete', HTMLButtonElement);
+			if (clockName === 'UTC') {
+				editButton.disabled = true;
+				editButton.hidden = true;
+				deleteButton.disabled = true;
+				deleteButton.hidden = true;
+			} else {
+				editButton.addEventListener('click', () => this.#showEditClockPopup(clockName, offset));
+				deleteButton.addEventListener('click', () => this.#deleteClock(clockName));
+			}
+
+			gallery.appendChild(clockFragment);
 		}
 
 		this.updateClocks(this.referenceDateTime);
+	}
+
+	#onClickSetSelected(clockName, alreadySelected) {
+		const self = this;
+		return (function() {
+			if (alreadySelected) {
+				return;
+			}
+
+			WorldClocks.ReferenceClockName = clockName;
+
+			self.loadClockGallery();
+		}).bind(self);
+	}
+
+	/**
+	 * @param {string} [name]
+	 * @param {string} [offset]
+	 */
+	#showEditClockPopup(name, offset) {
+		const popup = getKnownElementById('new-clock-modal', HTMLDialogElement);
+
+		const newName = getKnownElementById('new-clock-name', HTMLInputElement);
+		const newOffset = getKnownElementById('new-clock-offset', HTMLInputElement);
+		if (name) {
+			newName.value = name;
+			newOffset.value = offset;
+		}
+		else {
+			newName.value = '';
+			newOffset.value = '';
+		}
+
+		popup.showModal();
+	}
+
+	#deleteClock(name) {
+		if (confirm(`Are you sure you want to delete "${name}"?`)) {
+			const definitions = WorldClocks.ClockDefinitions;
+			delete definitions[name];
+			WorldClocks.ClockDefinitions = definitions;
+			this.loadClockGallery();
+		}
 	}
 }
 Object.defineProperty(window, 'WorldClocks', { value: WorldClocks });

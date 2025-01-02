@@ -9,7 +9,7 @@
 	<header>
 		<h1>Clocks</h1>
 		<div class="button-group">
-			<button id="add-clock" title="Add, edit or delete clock" class="icon material-symbols">add</button>
+			<button id="add-clock" title="Add new clock" class="icon material-symbols">add</button>
 			<button id="refresh-clocks" title="Update clocks" class="icon material-symbols">update</button>
 		</div>
 	</header>
@@ -21,14 +21,19 @@
 
 	<template id="clock-template">
 		<article class="clock">
-			<div class="clock-head">
+			<header class="clock-head">
 				<h3 class="clock-name"><slot name="clock-name">NEED NAME</slot></h3>
-				<span class="clock-date monospace"><slot name="clock-offset">UTC</slot></span>
-			</div>
+				<span class="clock-offset monospace"><slot name="clock-offset">UTC</slot></span>
+			</header>
 			<div class="clock-face monospace">
 				<span class="clock-time"><slot name="clock-time">23:59:60</slot></span>
 				<span class="clock-date"><slot name="clock-date">9999-12-31</slot></span>
 			</div>
+			<footer class="clock-actions">
+				<button class="icon material-symbols small set-selected" title="Set as reference clock"><slot name="clock-selected">check_box_outline_blank</slot></button>
+				<button class="icon material-symbols small edit" title="Edit clock">edit</button>
+				<button class="icon material-symbols small delete" title="Delete clock">delete</button>
+			</footer>
 		</article>
 	</template>
 	<dialog id="new-clock-modal">

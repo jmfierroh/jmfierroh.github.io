@@ -13,7 +13,7 @@
 	font-family: 'Material Symbols Outlined';
 	font-weight: normal;
 	font-style: normal;
-	font-size: 24px;
+	font-size: 32px;
 	line-height: 1;
 	letter-spacing: normal;
 	text-transform: none;
@@ -29,5 +29,14 @@
 		'FILL' 1,
 		'wght' 400,
 		'GRAD' 0,
-		'opsz' 24
+		'opsz' 32
+}
+
+.material-symbols.small {
+	font-size: 20px;
+	font-variation-settings:
+		'FILL' 1,
+		'wght' 400,
+		'GRAD' 0,
+		'opsz' 20
 }

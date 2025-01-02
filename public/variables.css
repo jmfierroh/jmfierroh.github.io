@@ -3,7 +3,7 @@ html {
 	--round-border-small: 10px;
 
 	/* https://colorffy.com/dark-theme-generator?colors=6dbed6-0d002b */
-	/** Dark theme primary colors */
+	/** Dark theme primary colors: Use the primary colors palette to maintain visual consistency and establish a solid brand identity for your website */
 	--clr-primary-a0: #6dbed6;
 	--clr-primary-a10: #80c5db;
 	--clr-primary-a20: #91ccdf;
@@ -18,4 +18,47 @@ html {
 	--clr-surface-a30: #554e6b;
 	--clr-surface-a40: #6f6982;
 	--clr-surface-a50: #8a859a;
+
+	/* https://colorffy.com/ui-palette-generator?colors=6dbed6-d6866d */
+	/** Accent colors: Best to enhances the primary colors and highlights interactive elements for a better user experience. */
+	--color-accent-a0: #d6866d;
+	--color-accent-a10: #af6f5a;
+	--color-accent-a20: #8a5848;
+	--color-accent-a30: #664237;
+	--color-accent-a40: #442e26;
+	--color-accent-a50: #251a17;
+
+	/** Semantic tones: Use them to convey meaning and provide feedback to users. */
+	/** Danger colors */
+	--color-danger-a0: #b41c2b;
+	--color-danger-a10: #851d22;
+	--color-danger-a20: #581919;
+	--color-danger-a30: #2f1310;
+
+	/** Success colors */
+	--color-success-a0: #009f42;
+	--color-success-a10: #167533;
+	--color-success-a20: #184d25;
+	--color-success-a30: #132916;
+
+	/** Warning colors */
+	--color-warning-a0: #f0ad4e;
+	--color-warning-a10: #af7f3c;
+	--color-warning-a20: #71532a;
+	--color-warning-a30: #392b19;
+
+	/** Info colors */
+	--color-info-a0: #388cfa;
+	--color-info-a10: #3267b5;
+	--color-info-a20: #284475;
+	--color-info-a30: #1a253b;
+
+	/** Text colors */
+	--color-text-primary-a0: #ffffff;
+	--color-text-primary-a20: #c6c6c6;
+	--color-text-primary-a40: #919191;
+	--color-text-primary-a60: #5e5e5e;
+	--color-text-primary-a80: #303030;
+	--color-text-primary-a100: #000000;
+
 }

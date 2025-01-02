@@ -6,6 +6,9 @@ html, body, h1, h2, h3, h4, h5, h6, p, hr, main, article, section {
 	margin: 0;
 	padding: 0;
 }
+*[hidden] {
+	display: none !important;
+}
 
 /******************************************************************************/
 /* Base styles */
@@ -17,7 +20,7 @@ html {
 	font-variation-settings: "wdth" 100;
 
 	background-color: var(--clr-surface-a0);
-	color: white;
+	color: var(--color-text-primary-a0);
 }
 
 /******************************************************************************/
@@ -25,7 +28,7 @@ html {
 button {
 	background-color: var(--clr-surface-a10);
 	border: 1px solid var(--clr-surface-a30);
-	color: white;
+	color: var(--color-text-primary-a0);
 	border-radius: var(--round-border-small);
 	font-weight: bold;
 
@@ -33,6 +36,10 @@ button {
 	flex-flow: row nowrap;
 	align-items: center;
 	cursor: pointer;
+}
+
+button:disabled {
+	color: var(--color-text-primary-a40);
 }
 
 button .icon, button .label {
@@ -120,7 +127,7 @@ dialog .dialog-header,
 dialog .dialog-main,
 dialog .dialog-footer {
 	padding: var(--default-spacing);
-	color: white;
+	color: var(--color-text-primary-a0);
 }
 
 dialog .dialog-main {
