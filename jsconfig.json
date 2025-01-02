@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"module": "CommonJS",
+		"target": "ESNext",
+		"checkJs": true,
+		"baseUrl": "./public",
+		"paths": {
+			"https://cdn.jsdelivr.net/npm/luxon@3.5.0/+esm": ["../node_modules/@types/luxon"]
+		}
+	}
+}

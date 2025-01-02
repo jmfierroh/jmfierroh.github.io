@@ -18,5 +18,8 @@
   "homepage": "https://github.com/jmfierroh/jmfierroh.github.io#readme",
   "dependencies": {
     "http-server": "^14.1.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2"
   }
 }
