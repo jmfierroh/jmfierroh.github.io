@@ -39,14 +39,14 @@
 	<dialog id="new-clock-modal">
 		<form method="dialog">
 			<header class="dialog-header">
-				<h2>Add, edit or delete clock</h2>
+				<h2>Add or edit a clock</h2>
 			</header>
 			<div class="dialog-main">
 				<label for="new-clock-name">Name:</label>
-				<input type="text" id="new-clock-name" required autocomplete="off"/>
+				<input type="text" id="new-clock-name" required autocomplete="off" placeholder="Name"/>
 				<br />
 				<label for="new-clock-offset">Offset:</label>
-				<input type="text" id="new-clock-offset" autocomplete="off" placeholder="America/New_York or EST or UTC+1" />
+				<input type="text" id="new-clock-offset" required autocomplete="off" placeholder="America/New_York or EST or UTC+1" />
 			</div>
 			<footer class="dialog-footer">
 				<button type="submit">Save</button>

@@ -84,6 +84,10 @@ function castNode(type, node) {
 	return node;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//                                   Logic                                   //
+///////////////////////////////////////////////////////////////////////////////
+
 class WorldClocks {
 	/**
 	 * @type {ClockUpdaterFunction[]}
@@ -93,6 +97,8 @@ class WorldClocks {
 
 	/** @type {luxon.DateTimeMaybeValid} */
 	referenceDateTime = DateTime.utc();
+
+	upsertPopup = new UpsertClockPopup();
 
 	static #getSortedClockDefinitions() {
 		const clockDefinitions = WorldClocks.ClockDefinitions;
@@ -122,82 +128,20 @@ class WorldClocks {
 
 		return clockDefinitions;
 	}
-	static set ClockDefinitions(value) {
-		window.localStorage.setItem('clocks', JSON.stringify(value));
-	}
+	static set ClockDefinitions(value) { window.localStorage.setItem('clocks', JSON.stringify(value)); }
 
 	static get ReferenceClockName() {
 		let refClock = window.localStorage.getItem('ref');
 		return refClock;
 	}
-	static set ReferenceClockName(value) {
-		window.localStorage.setItem('ref', value);
-	}
+	static set ReferenceClockName(value) { window.localStorage.setItem('ref', value); }
 
 	init() {
 		this.loadClockGallery();
 		getKnownElementById('refresh-clocks', HTMLButtonElement).addEventListener('click', () => this.updateClocks());
 		getKnownElementById('add-clock').addEventListener('click', () => this.#showEditClockPopup());
 
-		const newClockPopup = getKnownElementById('new-clock-modal', HTMLDialogElement);
-		newClockPopup.querySelectorAll('input[type=text]').forEach(input => {
-			castNode(HTMLInputElement, input).addEventListener('change', (e) => {
-				// @ts-ignore
-				castNode(HTMLInputElement, e.target)?.setCustomValidity('');
-			});
-		});
-		newClockPopup.addEventListener('submit', (e) => {
-			const newName = getKnownElementById('new-clock-name', HTMLInputElement);
-			const newOffset = getKnownElementById('new-clock-offset', HTMLInputElement);
-
-			if (newName.validity.valid  === false || newOffset.validity.valid === false) {
-				e.preventDefault();
-				return;
-			}
-
-			const newNameValue = newName.value?.trim();
-			const newOffsetValue = newOffset.value?.trim();
-
-			if (newNameValue.toUpperCase() === 'UTC') {
-				newName.setCustomValidity('UTC cannot be edited');
-				e.preventDefault();
-				return;
-			}
-			else {
-				newName.setCustomValidity('');
-			}
-
-			const clockDefinitions = WorldClocks.ClockDefinitions;
-			if (newOffsetValue) {
-				if (luxon.Info.normalizeZone(newOffsetValue)?.isValid) {
-					newOffset.setCustomValidity('');
-				}
-				else {
-					e.preventDefault();
-					newOffset.setCustomValidity('Invalid offset value');
-					return;
-				}
-				clockDefinitions[newNameValue] = newOffsetValue;
-			}
-			else {
-				delete clockDefinitions[newNameValue];
-			}
-
-			WorldClocks.ClockDefinitions = clockDefinitions;
-			this.loadClockGallery();
-		});
-		newClockPopup.addEventListener('close', (e) => {
-			// @ts-ignore
-			const popup = castNode(HTMLDialogElement, e.target);
-			popup.querySelectorAll('input').forEach(input => {
-				input.value = '.';
-				input.reportValidity();
-				input.setCustomValidity('');
-			});
-		});
-		queryKnownSelector(document, '#new-clock-modal button[type="reset"]').addEventListener('click', () => {
-			newClockPopup.close();
-		});
+		this.upsertPopup.init(this.loadClockGallery.bind(this));
 	}
 
 	/**
@@ -230,10 +174,7 @@ class WorldClocks {
 		return contents;
 	}
 
-	/**
-	 * @param {luxon.DateTimeMaybeValid} [dateTime]
-	 */
-	updateClocks(dateTime) {
+	updateClocks(/** @type {luxon.DateTimeMaybeValid}*/ dateTime = undefined) {
 		this.referenceDateTime = (dateTime?.setZone('UTC')) ?? luxon.DateTime.utc();
 		this.clockUpdaterFunctions.forEach(fn => {
 			fn(this.referenceDateTime);
@@ -324,7 +265,7 @@ class WorldClocks {
 		this.updateClocks(this.referenceDateTime);
 	}
 
-	#onClickSetSelected(clockName, alreadySelected) {
+	#onClickSetSelected(/** @type {string}*/ clockName, /** @type {boolean}*/ alreadySelected) {
 		const self = this;
 		return (function() {
 			if (alreadySelected) {
@@ -337,11 +278,7 @@ class WorldClocks {
 		}).bind(self);
 	}
 
-	/**
-	 * @param {string} [name]
-	 * @param {string} [offset]
-	 */
-	#showEditClockPopup(name, offset) {
+	#showEditClockPopup(/** @type {string}*/ name = undefined, /** @type {string}*/ offset = undefined) {
 		const popup = getKnownElementById('new-clock-modal', HTMLDialogElement);
 
 		const newName = getKnownElementById('new-clock-name', HTMLInputElement);
@@ -358,7 +295,7 @@ class WorldClocks {
 		popup.showModal();
 	}
 
-	#deleteClock(name) {
+	#deleteClock(/** @type {string}*/ name) {
 		if (confirm(`Are you sure you want to delete "${name}"?`)) {
 			const definitions = WorldClocks.ClockDefinitions;
 			delete definitions[name];
@@ -369,9 +306,118 @@ class WorldClocks {
 }
 Object.defineProperty(window, 'WorldClocks', { value: WorldClocks });
 
+class UpsertClockPopup {
+	static SimpleNumberRegex = /^(\+|-)?(\d|\d\d)(:\d\d)?$/;
+
+	static get PopupRoot() { return getKnownElementById('new-clock-modal', HTMLDialogElement); }
+	static get ClockName() { return getKnownElementById('new-clock-name', HTMLInputElement); }
+	static get ClockOffset() { return getKnownElementById('new-clock-offset', HTMLInputElement); }
+
+	init(/** @type {() => void} */ onSubmitAction = undefined) {
+		const popup = UpsertClockPopup.PopupRoot;
+
+		popup.querySelectorAll('input[type=text]').forEach(input => {
+			input.addEventListener('change', (e) => {
+				// @ts-ignore
+				castNode(HTMLInputElement, e.target)?.setCustomValidity?.('');
+			});
+		});
+
+		popup.addEventListener('submit', e => {
+			if (this.#handleSubmit(e)) {
+				onSubmitAction?.();
+			}
+		});
+		popup.addEventListener('close', e => this.#handleClose(e));
+
+		queryKnownSelector(popup, 'button[type="reset"]').addEventListener('click', () => UpsertClockPopup.PopupRoot.close());
+	}
+
+	#handleClose(/** @type {Event} */ e) {
+		// @ts-ignore
+		const popup = castNode(HTMLDialogElement, e.target);
+		popup.querySelectorAll('input').forEach(input => {
+			// Set to empty value so that prior invalid values don't prevent the modal from closing
+			input.value = ' ';
+			input.reportValidity();
+			input.setCustomValidity('');
+		});
+	}
+
+	#handleSubmit( /** @type {SubmitEvent} */ e) {
+		if (!UpsertClockPopup.#trimAndRevalidateValues()) {
+			e.preventDefault();
+			return false;
+		}
+
+		const nameElem = UpsertClockPopup.ClockName;
+		const offsetElem = UpsertClockPopup.ClockOffset;
+
+		const validStatus = [
+			UpsertClockPopup.#validateClockName(nameElem),
+			UpsertClockPopup.#validateClockOffset(offsetElem),
+		]
+		if (validStatus.some(valid => valid === false)) {
+			e.preventDefault();
+			return false;
+		}
+
+		const clockDefinitions = WorldClocks.ClockDefinitions;
+		clockDefinitions[nameElem.value] = offsetElem.value;
+		WorldClocks.ClockDefinitions = clockDefinitions;
+
+		return true;
+	}
+
+	static #trimAndRevalidateValues() {
+		const inputs = [
+			UpsertClockPopup.ClockName,
+			UpsertClockPopup.ClockOffset,
+		];
+		inputs.forEach(input => {
+			input.value = input.value?.trim() ?? '';
+			input.reportValidity();
+		});
+
+		return inputs.every(input => input.validity.valid);
+	}
+
+	static #validateClockName(/** @type {HTMLInputElement} */ element) {
+		if (element.value.toUpperCase() === 'UTC') {
+			element.setCustomValidity('UTC cannot be edited');
+			return false;
+		}
+		else {
+			element.setCustomValidity('');
+			return true;
+		}
+	}
+
+	static #validateClockOffset(/** @type {HTMLInputElement} */ element) {
+		const numberMatch = UpsertClockPopup.SimpleNumberRegex.exec(element.value);
+		if (numberMatch) {
+			// Convenience to allow entering simplified timezone offsets (i.e. +1 or 1:30 as opposed to +01:00 and +01:30)
+			const [
+				,
+				sign = '+',
+				hour,
+				minutes = ':00'
+			] = numberMatch;
+			element.value = `${sign}${hour.padStart(2, '0')}${minutes}`;
+		}
+
+		const zone = luxon.Info.normalizeZone(element.value);
+		if (zone.isValid) {
+			element.setCustomValidity('');
+			return true;
+		} else {
+			element.setCustomValidity('Invalid offset value');
+			return false;
+		}
+	}
+}
+
 const worldClocks = new WorldClocks();
 Object.defineProperty(window, 'worldClocks', { value: worldClocks });
 
 worldClocks.init();
-
-
