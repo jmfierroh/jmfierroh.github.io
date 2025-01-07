@@ -1,0 +1,85 @@
+@import url('../../main.css');
+
+body > header,
+body > main {
+	padding-inline: calc(2 * var(--default-spacing));
+}
+body > header {
+	padding-block: calc(2 * var(--default-spacing));
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+}
+.clock-gallery {
+	display: flex;
+	flex-flow: row wrap;
+	gap: var(--default-spacing) var(--default-spacing);
+}
+.clock {
+	--clock-areas-spacing: calc(var(--default-spacing) / 2);
+}
+.clock > header,
+.clock > .clock-face,
+.clock > footer {
+	border: 1px solid var(--clr-surface-a30);
+	padding: calc(var(--clock-areas-spacing) * 2);
+}
+.clock > header,
+.clock > .clock-face {
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+}
+.clock > header {
+	background-color: var(--clr-surface-a30);
+	color: var(--color-text-primary-a0);
+	border-top-left-radius: var(--round-border-small);
+	border-top-right-radius: var(--round-border-small);
+	border-block-end: 0;
+}
+.clock > footer {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	padding-inline: var(--clock-areas-spacing);
+	background-color: var(--clr-surface-a30);
+	color: var(--color-text-primary-a0);
+	border-bottom-left-radius: var(--round-border-small);
+	border-bottom-right-radius: var(--round-border-small);
+	border-block-start: 0;
+}
+.clock > .clock-face {
+	background-color: var(--clr-surface-a10);
+	color: var(--color-text-primary-a0);
+}
+.clock .clock-time {
+	font-size: xx-large;
+	font-weight: bold;
+}
+.clock .clock-date,
+.clock .clock-offset {
+	font-size: small;
+	color: var(--color-text-primary-a20);
+}
+
+.clock .clock-name {
+	color: var(--color-accent-a0);
+}
+
+.clock[data-selected] .clock-name,
+.clock[data-selected] button.set-selected {
+	color: var(--clr-primary-a0);
+}
+
+.clock:hover button.delete,
+.clock:focus button.delete,
+.clock button.delete:focus {
+	color: var(--color-danger-a0);
+}
+.clock:hover button.edit,
+.clock:focus button.edit,
+.clock button.edit:focus,
+.clock:not([data-selected]):hover button.set-selected,
+.clock:not([data-selected]) button.set-selected:focus {
+	color: var(--color-info-a0);
+}

@@ -1,0 +1,25 @@
+{
+  "name": "jmfierroh.github.io",
+  "version": "1.0.0",
+  "description": "Allow for local previewing the page",
+  "private": true,
+  "scripts": {
+    "start": "http-server ./public -o"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmfierroh/jmfierroh.github.io.git"
+  },
+  "author": "Jose Miguel Fierro",
+  "license": "EUPL-1.2",
+  "bugs": {
+    "url": "https://github.com/jmfierroh/jmfierroh.github.io/issues"
+  },
+  "homepage": "https://github.com/jmfierroh/jmfierroh.github.io#readme",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2"
+  }
+}
